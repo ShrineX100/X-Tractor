@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Twitter Video Downloader</title>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: '#FFF8EA',
+          ink: '#111111',
+          orange: '#FF7A33',
+          yellow: '#FFD54F',
+          purple: '#9D7FE0',
+          mint: '#8CE0C9',
+          pink: '#FF99AA',
+          blue: '#7EC6F2'
+        },
+        boxShadow: {
+          'brutal-sm': '3px 3px 0 0 #111111',
+          'brutal': '5px 5px 0 0 #111111',
+          'brutal-lg': '8px 8px 0 0 #111111',
+          'brutal-window': '10px 10px 0 0 #111111'
+        }
+      }
+    }
+  }
+</script>
+<style>
+  body { background-color: #FFF8EA; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  
+  /* Custom CSS for elements that are easier to handle outside Tailwind utilities */
+  .ttext { 
+    display: -webkit-box; 
+    -webkit-line-clamp: 3; 
+    -webkit-box-orient: vertical; 
+    overflow: hidden; 
+  }
+  
+  .qp {
+    background: #FFF8EA; color: #111111; border: 3px solid #111111;
+    border-radius: 12px; box-shadow: 3px 3px 0 0 #111111;
+    padding: 12px; text-align: left; font-weight: 900;
+    transition: transform 0.15s, background-color 0.15s; cursor: pointer;
+    min-width: 110px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .qp:hover { transform: translateY(-2px); background: #FFD54F; }
+  .qp.act { background: #9D7FE0; color: #FFF8EA; }
+  .qp.act:hover { background: #9D7FE0; }
+  .qp-bot { color: rgba(17,17,17,0.6); font-size: 11px; font-weight: 800; }
+  .qp.act .qp-bot { color: rgba(255,248,234,0.8); }
+
+  .spin { display: inline-block; width: 16px; height: 16px; border: 3px solid rgba(17,17,17,0.2); border-top-color: #111; border-radius: 50%; animation: sp .7s linear infinite; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  
+  .fi { animation: fi .3s ease }
+  @keyframes fi { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
+</style>
+</head>
+<body class="font-sans text-ink">
+
+<h2 class="sr-only">X (Twitter) video downloader — paste a tweet URL to extract and download the video</h2>
+
+<div class="wrap min-h-screen w-full flex flex-col items-center px-4 py-10 md:py-14">
+  
+  <!-- Header -->
+  <div class="hdr fi text-center mb-10 rotate-[-2deg]">
+    <div class="w-16 h-16 bg-purple border-[3px] border-ink rounded-[18px] shadow-brutal-sm flex items-center justify-center mx-auto mb-4 transition hover:-translate-y-1 hover:shadow-brutal cursor-pointer">
+      <svg viewBox="0 0 24 24" width="32" height="32" fill="#111111"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.261 5.635L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+    </div>
+    <h1 class="text-3xl md:text-4xl font-black tracking-[-0.065em] text-ink">Twitter Downloader</h1>
+    <p class="font-extrabold text-ink/70 mt-2 text-sm">Paste any post URL · NSFW &amp; age-restricted supported</p>
+  </div>
+
+  <!-- Input Card -->
+  <div class="card fi w-full max-w-xl bg-cream border-[3px] border-ink rounded-[20px] shadow-brutal-lg p-5 mb-6 rotate-[1deg] hover:rotate-0 transition-transform duration-300">
+    <div class="flex gap-3 mb-4">
+      <div class="relative flex-1">
+        <i class="ti ti-link absolute left-4 top-1/2 -translate-y-1/2 text-ink/60 text-xl pointer-events-none"></i>
+        <input type="text" id="url" placeholder="https://x.com/user/status/..." autocomplete="off" spellcheck="false" 
+          class="w-full bg-cream border-[3px] border-ink rounded-[12px] py-3 pl-12 pr-10 text-ink font-bold placeholder-ink/40 focus:outline-none focus:ring-4 focus:ring-orange/40 transition">
+        <button id="clr" aria-label="Clear URL" class="absolute right-3 top-1/2 -translate-y-1/2 text-ink/60 hover:text-ink p-1 hidden">
+          <i class="ti ti-x text-xl"></i>
+        </button>
+      </div>
+      <button class="pbtn bg-yellow border-[3px] border-ink rounded-[12px] px-4 font-black shadow-brutal-sm hover:-translate-y-1 hover:shadow-brutal transition flex items-center gap-2" id="pbtn" aria-label="Paste from clipboard">
+        <i class="ti ti-clipboard text-lg"></i> Paste
+      </button>
+    </div>
+    <button class="fbtn w-full bg-orange border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2" id="fbtn">
+      <i class="ti ti-search text-lg"></i> Fetch video
+    </button>
+    
+    <div class="ebox mt-4 p-3.5 bg-pink border-[3px] border-ink rounded-[12px] text-ink font-black flex items-start gap-2 hidden" id="ebox" role="alert">
+      <i class="ti ti-alert-triangle text-lg mt-0.5"></i>
+      <span id="emsg"></span>
+    </div>
+  </div>
+
+  <!-- Result Container -->
+  <div class="card rc w-full max-w-xl bg-cream border-[3px] border-ink rounded-[20px] shadow-brutal-lg overflow-hidden hidden mb-6 rotate-[-1deg] hover:rotate-0 transition-transform duration-300" id="rc"></div>
+
+  <!-- Footer -->
+  <p class="foot max-w-md text-center text-xs font-extrabold text-ink/60 leading-relaxed mt-6">
+    Works with public, unlisted, and age-restricted / NSFW videos. Private account videos require cookie auth — not supported in-browser. For personal use only.
+  </p>
+</div>
+
+<script>
+(function(){
+const G=id=>document.getElementById(id);
+const urlIn=G('url'),clrBtn=G('clr'),pstBtn=G('pbtn'),fchBtn=G('fbtn'),ebox=G('ebox'),emsg=G('emsg'),rc=G('rc');
+let vars=[],selQ=0,tid='',vidDuration=0;
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function fmtD(s){
+  if(!s)return'';
+  const m=Math.floor(s/60),sec=Math.floor(s%60);
+  return m+':'+String(sec).padStart(2,'0');
+}
+
+function fmtN(n){
+  if(n==null)return'0';
+  return n>=1e6?(n/1e6).toFixed(1)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':String(n);
+}
+
+// Extract WxH from URL → returns {w,h} or null
+function dimsFromUrl(url){
+  const m=(url||'').match(/\/(\d{3,5})x(\d{3,5})\//);
+  if(!m)return null;
+  return{w:parseInt(m[1]),h:parseInt(m[2])};
+}
+
+// Quality label: uses actual pixel dims from URL
+function qlbl(v){
+  const d=dimsFromUrl(v.url);
+  if(d){
+    return Math.min(d.w,d.h)+'p';
+  }
+  const b=v.bitrate||0;
+  return b>=2176000?'1080p':b>=832000?'720p':b>=432000?'480p':'360p';
+}
+
+function resDims(v){
+  const d=dimsFromUrl(v.url);
+  if(d)return d.w+'×'+d.h;
+  return null;
+}
+
+function estSize(bitrate,duration){
+  if(!bitrate||!duration)return null;
+  const mb=(bitrate*duration)/8/1048576;
+  if(mb>=1000)return'~'+(mb/1024).toFixed(1)+' GB';
+  return'~'+mb.toFixed(1)+' MB';
+}
+
+function parseUrl(raw){
+  raw=(raw||'').trim();
+  const m=raw.match(/(?:twitter\.com|x\.com)\/(?:#!\/)?(\w+)\/status(?:es)?\/(\d+)/i);
+  if(m)return{u:m[1],id:m[2]};
+  if(/^\d{15,}$/.test(raw))return{u:'i',id:raw};
+  return null;
+}
+
+function showErr(msg){emsg.textContent=msg;ebox.classList.remove('hidden');ebox.style.display='flex'}
+function hideErr(){ebox.classList.add('hidden');ebox.style.display='none'}
+
+urlIn.addEventListener('input',()=>{clrBtn.style.display=urlIn.value?'flex':'none'});
+urlIn.addEventListener('keydown',e=>{if(e.key==='Enter')doFetch()});
+clrBtn.addEventListener('click',()=>{urlIn.value='';clrBtn.style.display='none';hideErr();rc.style.display='none';urlIn.focus()});
+pstBtn.addEventListener('click',async()=>{
+  try{const t=await navigator.clipboard.readText();if(t){urlIn.value=t;clrBtn.style.display='flex'}}
+  catch{urlIn.focus()}
+});
+fchBtn.addEventListener('click',doFetch);
+
+async function doFetch(){
+  const info=parseUrl(urlIn.value);
+  if(!info){showErr('Please enter a valid Twitter / X post URL');return}
+  hideErr();rc.style.display='none';
+  fchBtn.disabled=true;fchBtn.innerHTML='<span class="spin"></span> Fetching...';
+  try{
+    const r=await fetch(`https://api.fxtwitter.com/${info.u}/status/${info.id}`);
+    const d=await r.json();
+    if(d.code===401||d.code===403)throw new Error("Private account — can't fetch without authentication");
+    if(d.code===404)throw new Error('Post not found or deleted');
+    if(d.code!==200)throw new Error(d.message||`API error ${d.code}`);
+    const t=d.tweet;
+    if(!t.media?.videos?.length){
+      if(t.media?.photos?.length)throw new Error('Images only — no video in this tweet');
+      throw new Error('No video found in this tweet');
+    }
+    const v=t.media.videos[0];
+    vidDuration=v.duration||0;
+    let rv=v.variants||[];
+    if(!rv.length&&v.url)rv=[{url:v.url,content_type:'video/mp4',bitrate:0}];
+    vars=rv.filter(x=>!x.content_type||x.content_type==='video/mp4')
+           .sort((a,b)=>(b.bitrate||0)-(a.bitrate||0));
+    selQ=0;tid=t.id||Date.now();
+    renderResult(t,v);
+  }catch(e){showErr(e.message)}
+  finally{fchBtn.disabled=false;fchBtn.innerHTML='<i class="ti ti-search text-lg"></i> Fetch video'}
+}
+
+function renderResult(t,v){
+  const sens=t.possibly_sensitive||t.sensitive;
+  const isGif=(v.url||'').includes('tweet_video');
+  const multi=t.media.videos.length>1;
+
+  const topRes=v.width&&v.height?v.width+'×'+v.height:null;
+  const topSize=estSize((vars[0]?.bitrate)||0,vidDuration);
+  const codec=(vars[0]?.url||'').includes('avc1')?'H.264':(vars[0]?.url||'').includes('hevc')?'HEVC':'MP4';
+
+  const pillsHtml=vars.map((vr,i)=>{
+    const label=qlbl(vr);
+    const dims=resDims(vr);
+    const size=estSize(vr.bitrate,vidDuration);
+    const star=i===0?'★ ':'';
+    const meta=[dims,size].filter(Boolean).join(' · ');
+    return`<button class="qp${i===0?' act':''}" data-i="${i}">
+      <span class="qp-top text-sm flex items-center gap-1">${star}${label}</span>
+      ${meta?`<span class="qp-bot">${meta}</span>`:''}
+    </button>`;
+  }).join('');
+
+  rc.innerHTML=`
+    <!-- Author Row -->
+    <div class="p-5 flex items-center gap-4 border-b-[3px] border-ink">
+      ${t.author?.avatar_url
+        ?`<img class="w-12 h-12 rounded-full border-[3px] border-ink shadow-brutal-sm object-cover" src="${esc(t.author.avatar_url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="w-12 h-12 rounded-full border-[3px] border-ink shadow-brutal-sm bg-purple text-cream flex items-center justify-center" style="display:none"><i class="ti ti-user text-xl"></i></div>`
+        :`<div class="w-12 h-12 rounded-full border-[3px] border-ink shadow-brutal-sm bg-purple text-cream flex items-center justify-center"><i class="ti ti-user text-xl"></i></div>`}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap font-black text-lg tracking-[-0.035em]">
+          ${esc(t.author?.name)}
+          ${t.author?.verified?'<i class="ti ti-circle-check-filled text-blue text-xl" aria-label="Verified"></i>':''}
+          ${sens?'<span class="bg-pink border-[2px] border-ink text-ink text-xs font-black px-2 py-0.5 rounded-full">NSFW</span>':''}
+          ${isGif?'<span class="bg-yellow border-[2px] border-ink text-ink text-xs font-black px-2 py-0.5 rounded-full">GIF</span>':''}
+        </div>
+        <div class="font-extrabold text-ink/60 text-sm mt-0.5">@${esc(t.author?.screen_name)}</div>
+      </div>
+      <a href="${esc(t.url)}" target="_blank" rel="noopener noreferrer" class="bg-yellow border-[2px] border-ink rounded-[10px] px-3 py-1.5 font-black text-xs shadow-brutal-sm hover:-translate-y-1 transition flex items-center gap-1">
+        Open <i class="ti ti-external-link text-sm"></i>
+      </a>
+    </div>
+    
+    ${multi?`<div style="padding:9px 20px;border-bottom:3px solid #111111;font-size:12px;font-weight:800;color:rgba(17,17,17,0.7)" class="flex items-center gap-2"><i class="ti ti-info-circle text-lg"></i> ${t.media.videos.length} videos in this post — showing the first one</div>`:''}
+    
+    ${t.text?`<div class="ttext p-5 border-b-[3px] border-ink font-bold text-ink/80 leading-relaxed text-sm">${esc(t.text)}</div>`:''}
+    
+    <!-- Desktop Window Motif -->
+    ${v.thumbnail_url?`
+    <div class="bg-cream border-b-[3px] border-ink">
+      <div class="flex items-center gap-2 px-5 py-3 border-b-[3px] border-ink bg-purple">
+        <span class="w-4 h-4 rounded-full border-2 border-ink bg-orange"></span>
+        <span class="w-4 h-4 rounded-full border-2 border-ink bg-yellow"></span>
+        <span class="w-4 h-4 rounded-full border-2 border-ink bg-mint"></span>
+        <span class="ml-auto bg-cream border-2 border-ink rounded-md px-3 py-1 text-[0.7rem] font-black uppercase tracking-tight">Video.mp4</span>
+      </div>
+      <div class="relative bg-ink overflow-hidden flex items-center justify-center max-h-[400px]">
+        <img class="w-full max-h-[400px] object-contain opacity-90" src="${esc(v.thumbnail_url)}" alt="Video thumbnail" onerror="this.parentElement.style.display='none'">
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-16 h-16 rounded-full bg-cream border-[3px] border-ink shadow-brutal-sm flex items-center justify-center text-ink text-2xl transition hover:-translate-y-1 cursor-pointer">
+            <i class="ti ti-player-play-filled"></i>
+          </div>
+        </div>
+        ${v.duration?`<div class="absolute bottom-3 right-3 bg-ink text-cream border-2 border-cream rounded-md px-2 py-1 text-xs font-black flex items-center gap-1"><i class="ti ti-clock text-sm"></i> ${fmtD(v.duration)}</div>`:''}
+        ${topRes?`<div class="absolute bottom-3 left-3 bg-ink text-cream border-2 border-cream rounded-md px-2 py-1 text-xs font-black flex items-center gap-1"><i class="ti ti-maximize text-sm"></i> ${topRes}</div>`:''}
+      </div>
+    </div>`:''}
+    
+    <!-- Meta Data Strip -->
+    <div class="p-5 border-b-[3px] border-ink bg-yellow/20 flex flex-wrap gap-4">
+      ${topRes?`<span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-maximize text-lg"></i> ${topRes}</span>`:''}
+      ${vidDuration?`<span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-clock text-lg"></i> ${fmtD(vidDuration)}</span>`:''}
+      ${topSize?`<span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-database text-lg"></i> ${topSize}</span>`:''}
+      <span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-file-type-mp4 text-lg"></i> ${codec}</span>
+    </div>
+    
+    <!-- Stats -->
+    <div class="p-5 border-b-[3px] border-ink flex flex-wrap gap-5">
+      <span class="flex items-center gap-2 font-black text-sm text-ink/80"><i class="ti ti-heart text-pink text-lg"></i> ${fmtN(t.likes)} likes</span>
+      <span class="flex items-center gap-2 font-black text-sm text-ink/80"><i class="ti ti-repeat text-mint text-lg"></i> ${fmtN(t.retweets)} retweets</span>
+      <span class="flex items-center gap-2 font-black text-sm text-ink/80"><i class="ti ti-message-circle-2 text-blue text-lg"></i> ${fmtN(t.replies)} replies</span>
+    </div>
+    
+    <!-- Download Area -->
+    <div class="p-5">
+      ${vars.length>1?`<div class="font-black text-xs uppercase tracking-wider mb-3">Select quality</div>`:''}
+      <div class="flex flex-wrap gap-3 mb-5">${pillsHtml}</div>
+      <button class="w-full bg-orange border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2" id="dbtn">
+        <i class="ti ti-download text-xl"></i> Download ${qlbl(vars[0])} MP4
+      </button>
+      <div class="dtip text-xs font-bold text-ink/70 text-center mt-3 hidden" id="dtip"></div>
+    </div>
+  `;
+  rc.style.display='block';
+  rc.classList.remove('fi');void rc.offsetWidth;rc.classList.add('fi');
+
+  document.querySelectorAll('.qp').forEach(p=>{
+    p.onclick=()=>{
+      selQ=parseInt(p.dataset.i);
+      document.querySelectorAll('.qp').forEach(x=>x.classList.remove('act'));
+      p.classList.add('act');
+      resetDlBtn();
+    }
+  });
+  G('dbtn').onclick=doDownload;
+}
+
+function resetDlBtn(){
+  const db=G('dbtn');if(!db)return;
+  db.className='w-full bg-orange border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2';
+  db.innerHTML=`<i class="ti ti-download text-xl"></i> Download ${qlbl(vars[selQ])} MP4`;
+  db.onclick=doDownload;
+  const dt=G('dtip');if(dt)dt.classList.add('hidden');
+}
+
+function doDownload(){
+  const vr=vars[selQ];if(!vr)return;
+  const db=G('dbtn'),dt=G('dtip');
+  db.className='w-full bg-purple border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-cream shadow-brutal transition flex items-center justify-center gap-2';
+  db.innerHTML='<span class="spin"></span> Downloading...';
+  if(dt)dt.classList.add('hidden');
+  
+  const fname=`x_${tid}_${qlbl(vr)}.mp4`;
+  fetch(vr.url,{mode:'cors'})
+    .then(r=>{if(!r.ok)throw 0;return r.blob()})
+    .then(blob=>{
+      const u=URL.createObjectURL(blob);
+      const a=Object.assign(document.createElement('a'),{href:u,download:fname});
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(u),2000);
+      db.className='w-full bg-mint border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2';
+      db.innerHTML='<i class="ti ti-check text-xl"></i> Download started!';
+    })
+    .catch(()=>{
+      window.open(vr.url,'_blank');
+      db.className='w-full bg-blue border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2';
+      db.innerHTML='<i class="ti ti-external-link text-xl"></i> Opened in new tab';
+      if(dt){dt.textContent='Right-click the video in the new tab → "Save video as…" to save it.';dt.classList.remove('hidden')}
+    })
+    .finally(()=>{setTimeout(()=>resetDlBtn(),4500)});
+}
+})();
+</script>
+</body>
+</html>
