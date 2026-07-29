@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Twitter Video Downloader</title>
+<title>X-Tractor</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='14' fill='%239D7FE0' stroke='%23111111' stroke-width='4'/%3E%3Cg transform='translate(15,15) scale(1.45)'%3E%3Cpath d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.261 5.635L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z' fill='%23111111'/%3E%3C/g%3E%3C/svg%3E">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
@@ -73,8 +74,8 @@
     <div class="w-16 h-16 bg-purple border-[3px] border-ink rounded-[18px] shadow-brutal-sm flex items-center justify-center mx-auto mb-4 transition hover:-translate-y-1 hover:shadow-brutal cursor-pointer">
       <svg viewBox="0 0 24 24" width="32" height="32" fill="#111111"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.261 5.635L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
     </div>
-    <h1 class="text-3xl md:text-4xl font-black tracking-[-0.065em] text-ink">Twitter Downloader</h1>
-    <p class="font-extrabold text-ink/70 mt-2 text-sm">Paste any post URL · NSFW &amp; age-restricted supported</p>
+    <h1 class="text-3xl md:text-4xl font-black tracking-[-0.065em] text-ink">X-Tractor</h1>
+    <p class="font-extrabold text-ink/70 mt-2 text-sm">Paste a link and it Sinks !</p>
   </div>
 
   <!-- Input Card -->
@@ -107,7 +108,8 @@
 
   <!-- Footer -->
   <p class="foot max-w-md text-center text-xs font-extrabold text-ink/60 leading-relaxed mt-6">
-    Works with public, unlisted, and age-restricted / NSFW videos. Private account videos require cookie auth — not supported in-browser. For personal use only.
+    Built with <span class="text-purple">♥</span> by Shrine<br>
+    © 2026
   </p>
 </div>
 
@@ -173,7 +175,7 @@ urlIn.addEventListener('input',()=>{clrBtn.style.display=urlIn.value?'flex':'non
 urlIn.addEventListener('keydown',e=>{if(e.key==='Enter')doFetch()});
 clrBtn.addEventListener('click',()=>{urlIn.value='';clrBtn.style.display='none';hideErr();rc.style.display='none';urlIn.focus()});
 pstBtn.addEventListener('click',async()=>{
-  try{const t=await navigator.clipboard.readText();if(t){urlIn.value=t;clrBtn.style.display='flex'}}
+  try{const t=await navigator.clipboard.readText();if(t){urlIn.value=t;clrBtn.style.display='flex';doFetch()}}
   catch{urlIn.focus()}
 });
 fchBtn.addEventListener('click',doFetch);
@@ -294,6 +296,15 @@ function renderResult(t,v){
       <button class="w-full bg-orange border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2" id="dbtn">
         <i class="ti ti-download text-xl"></i> Download ${qlbl(vars[0])} MP4
       </button>
+      <div class="pbar-wrap mt-3 hidden" id="pbarWrap">
+        <div class="w-full h-4 bg-cream border-[3px] border-ink rounded-full overflow-hidden">
+          <div class="h-full bg-purple transition-all duration-150" id="pbar" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between mt-1.5">
+          <span class="text-xs font-black text-ink/70" id="pbarPct">0%</span>
+          <span class="text-xs font-black text-ink/70" id="pbarSize"></span>
+        </div>
+      </div>
       <div class="dtip text-xs font-bold text-ink/70 text-center mt-3 hidden" id="dtip"></div>
     </div>
   `;
@@ -317,14 +328,25 @@ function resetDlBtn(){
   db.innerHTML=`<i class="ti ti-download text-xl"></i> Download ${qlbl(vars[selQ])} MP4`;
   db.onclick=doDownload;
   const dt=G('dtip');if(dt)dt.classList.add('hidden');
+  const pw=G('pbarWrap');if(pw)pw.classList.add('hidden');
+  const pb=G('pbar');if(pb)pb.style.width='0%';
+  const pp=G('pbarPct');if(pp)pp.textContent='0%';
+  const ps=G('pbarSize');if(ps)ps.textContent='';
+}
+
+function fmtBytes(n){
+  if(n>=1048576)return(n/1048576).toFixed(1)+' MB';
+  if(n>=1024)return(n/1024).toFixed(0)+' KB';
+  return n+' B';
 }
 
 function doDownload(){
   const vr=vars[selQ];if(!vr)return;
-  const db=G('dbtn'),dt=G('dtip');
+  const db=G('dbtn'),dt=G('dtip'),pw=G('pbarWrap'),pb=G('pbar'),pp=G('pbarPct'),ps=G('pbarSize');
   db.className='w-full bg-purple border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-cream shadow-brutal transition flex items-center justify-center gap-2';
   db.innerHTML='<span class="spin"></span> Downloading...';
   if(dt)dt.classList.add('hidden');
+  if(pw){pw.classList.remove('hidden');pb.style.width='0%';pp.textContent='0%';ps.textContent=''}
 
   const fname=`x_${tid}_${qlbl(vr)}.mp4`;
 
@@ -332,8 +354,30 @@ function doDownload(){
   // server-to-server request instead of a browser request from a
   // vercel.app referrer (which it 403s).
   fetch(`/api/download?url=${encodeURIComponent(vr.url)}&filename=${encodeURIComponent(fname)}`)
-    .then(r=>{if(!r.ok)throw 0;return r.blob()})
+    .then(async r=>{
+      if(!r.ok)throw 0;
+      const total=parseInt(r.headers.get('Content-Length')||'0',10);
+      if(!r.body||!total){
+        return r.blob();
+      }
+      const reader=r.body.getReader();
+      const chunks=[];
+      let received=0;
+      while(true){
+        const {done,value}=await reader.read();
+        if(done)break;
+        chunks.push(value);
+        received+=value.length;
+        const pct=Math.min(100,Math.round((received/total)*100));
+        if(pb)pb.style.width=pct+'%';
+        if(pp)pp.textContent=pct+'%';
+        if(ps)ps.textContent=`${fmtBytes(received)} / ${fmtBytes(total)}`;
+      }
+      return new Blob(chunks,{type:'video/mp4'});
+    })
     .then(blob=>{
+      if(pb)pb.style.width='100%';
+      if(pp)pp.textContent='100%';
       const u=URL.createObjectURL(blob);
       const a=Object.assign(document.createElement('a'),{href:u,download:fname});
       document.body.appendChild(a);a.click();document.body.removeChild(a);
@@ -353,6 +397,7 @@ function doDownload(){
       db.className='w-full bg-blue border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2';
       db.innerHTML='<i class="ti ti-external-link text-xl"></i> Opened in new tab';
       if(dt){dt.textContent='Right-click the video in the new tab → "Save video as…" to save it.';dt.classList.remove('hidden')}
+      if(pw)pw.classList.add('hidden');
     })
     .finally(()=>{setTimeout(()=>resetDlBtn(),4500)});
 }
