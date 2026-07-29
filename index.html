@@ -383,7 +383,7 @@ function doDownload(){
       document.body.appendChild(a);a.click();document.body.removeChild(a);
       setTimeout(()=>URL.revokeObjectURL(u),2000);
       db.className='w-full bg-mint border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2';
-      db.innerHTML='<i class="ti ti-check text-xl"></i> Download started!';
+      db.innerHTML='<i class="ti ti-check text-xl"></i> Finished!';
     })
     .catch(()=>{
       // Fallback: open in new tab directly
