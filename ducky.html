@@ -61,6 +61,7 @@
   .fi { animation: fi .3s ease }
   @keyframes fi { from { opacity: 0; transform: translateY(8px) } to { opacity: 1; transform: none } }
 </style>
+<base target="_blank">
 </head>
 <body class="font-sans text-ink">
 
@@ -327,9 +328,15 @@ function doDownload(){
   db.className='w-full bg-purple border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-cream shadow-brutal transition flex items-center justify-center gap-2';
   db.innerHTML='<span class="spin"></span> Downloading...';
   if(dt)dt.classList.add('hidden');
-  
+
   const fname=`x_${tid}_${qlbl(vr)}.mp4`;
-  fetch(vr.url,{mode:'cors'})
+
+  // 1. Try in-browser fetch with NO referrer so video.twimg.com doesn't 403 us
+  fetch(vr.url, {
+    mode: 'cors',
+    referrerPolicy: 'no-referrer',
+    credentials: 'omit'
+  })
     .then(r=>{if(!r.ok)throw 0;return r.blob()})
     .then(blob=>{
       const u=URL.createObjectURL(blob);
@@ -340,7 +347,14 @@ function doDownload(){
       db.innerHTML='<i class="ti ti-check text-xl"></i> Download started!';
     })
     .catch(()=>{
-      window.open(vr.url,'_blank');
+      // 2. Fallback: open in new tab WITHOUT sending referer
+      const a=document.createElement('a');
+      a.href=vr.url;
+      a.target='_blank';
+      a.rel='noopener noreferrer';
+      a.referrerPolicy='no-referrer';
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+
       db.className='w-full bg-blue border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2';
       db.innerHTML='<i class="ti ti-external-link text-xl"></i> Opened in new tab';
       if(dt){dt.textContent='Right-click the video in the new tab → "Save video as…" to save it.';dt.classList.remove('hidden')}
