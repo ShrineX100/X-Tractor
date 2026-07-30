@@ -320,15 +320,15 @@ function renderResult(t,v){
         <span class="w-4 h-4 rounded-full border-2 border-ink bg-mint"></span>
         <span class="ml-auto bg-cream border-2 border-ink rounded-md px-3 py-1 text-[0.7rem] font-black uppercase tracking-tight" style="color:#111111">Video.mp4</span>
       </div>
-      <div class="relative bg-ink overflow-hidden flex items-center justify-center max-h-[400px]">
-        <img class="w-full max-h-[400px] object-contain opacity-90" src="${esc(v.thumbnail_url)}" alt="Video thumbnail" onerror="this.parentElement.style.display='none'">
-        <div class="absolute inset-0 flex items-center justify-center">
-          <div class="w-16 h-16 rounded-full bg-cream border-[3px] border-ink shadow-brutal-sm flex items-center justify-center text-2xl transition hover:-translate-y-1 cursor-pointer" style="color:#111111">
+      <div class="relative bg-ink overflow-hidden flex items-center justify-center max-h-[400px]" id="playerWrap">
+        <img class="w-full max-h-[400px] object-contain opacity-90" src="${esc(v.thumbnail_url)}" alt="Video thumbnail" onerror="this.parentElement.style.display='none'" id="thumbImg">
+        <div class="absolute inset-0 flex items-center justify-center cursor-pointer" id="playOverlay">
+          <div class="w-16 h-16 rounded-full bg-cream border-[3px] border-ink shadow-brutal-sm flex items-center justify-center text-2xl transition hover:-translate-y-1" style="color:#111111">
             <i class="ti ti-player-play-filled"></i>
           </div>
         </div>
-        ${v.duration?`<div class="absolute bottom-3 right-3 bg-ink text-cream border-2 border-cream rounded-md px-2 py-1 text-xs font-black flex items-center gap-1"><i class="ti ti-clock text-sm"></i> ${fmtD(v.duration)}</div>`:''}
-        ${topRes?`<div class="absolute bottom-3 left-3 bg-ink text-cream border-2 border-cream rounded-md px-2 py-1 text-xs font-black flex items-center gap-1"><i class="ti ti-maximize text-sm"></i> ${topRes}</div>`:''}
+        ${v.duration?`<div class="absolute bottom-3 right-3 bg-ink text-cream border-2 border-cream rounded-md px-2 py-1 text-xs font-black flex items-center gap-1" id="durBadge"><i class="ti ti-clock text-sm"></i> ${fmtD(v.duration)}</div>`:''}
+        ${topRes?`<div class="absolute bottom-3 left-3 bg-ink text-cream border-2 border-cream rounded-md px-2 py-1 text-xs font-black flex items-center gap-1" id="resBadge"><i class="ti ti-maximize text-sm"></i> ${topRes}</div>`:''}
       </div>
     </div>`:''}
     
@@ -378,6 +378,28 @@ function renderResult(t,v){
     }
   });
   G('dbtn').onclick=doDownload;
+
+  const playOverlay=G('playOverlay');
+  if(playOverlay){
+    playOverlay.onclick=()=>{
+      const wrap=G('playerWrap'),thumb=G('thumbImg');
+      const playUrl=(vars[0]||v).url||v.url;
+      const vid=document.createElement('video');
+      vid.className='w-full max-h-[400px] object-contain';
+      vid.src=playUrl;
+      vid.controls=true;
+      vid.autoplay=true;
+      vid.playsInline=true;
+      vid.setAttribute('referrerpolicy','no-referrer');
+      vid.poster=v.thumbnail_url||'';
+      vid.onerror=()=>{
+        // Playback blocked — fall back to opening the video directly
+        window.open(playUrl,'_blank','noopener,noreferrer');
+      };
+      wrap.innerHTML='';
+      wrap.appendChild(vid);
+    };
+  }
 }
 
 function resetDlBtn(){
