@@ -211,12 +211,6 @@ function resDims(v){
   return null;
 }
 
-function estSize(bitrate,duration){
-  if(!bitrate||!duration)return null;
-  const mb=(bitrate*duration)/8/1048576;
-  if(mb>=1000)return'~'+(mb/1024).toFixed(1)+' GB';
-  return'~'+mb.toFixed(1)+' MB';
-}
 
 function parseUrl(raw){
   raw=(raw||'').trim();
@@ -272,18 +266,16 @@ function renderResult(t,v){
   const multi=t.media.videos.length>1;
 
   const topRes=v.width&&v.height?v.width+'×'+v.height:null;
-  const topSize=estSize((vars[0]?.bitrate)||0,vidDuration);
   const codec=(vars[0]?.url||'').includes('avc1')?'H.264':(vars[0]?.url||'').includes('hevc')?'HEVC':'MP4';
 
   const pillsHtml=vars.map((vr,i)=>{
     const label=qlbl(vr);
     const dims=resDims(vr);
-    const size=estSize(vr.bitrate,vidDuration);
     const star=i===0?'★ ':'';
-    const meta=[dims,size].filter(Boolean).join(' · ');
+    const meta=[dims,'<span id="sz-'+i+'">…</span>'].filter(Boolean).join(' · ');
     return`<button class="qp${i===0?' act':''}" data-i="${i}">
       <span class="qp-top text-sm flex items-center gap-1">${star}${label}</span>
-      ${meta?`<span class="qp-bot">${meta}</span>`:''}
+      <span class="qp-bot">${meta}</span>
     </button>`;
   }).join('');
 
@@ -336,7 +328,7 @@ function renderResult(t,v){
     <div class="p-5 border-b-[3px] border-ink bg-yellow/20 flex flex-wrap gap-4">
       ${topRes?`<span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-maximize text-lg"></i> ${topRes}</span>`:''}
       ${vidDuration?`<span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-clock text-lg"></i> ${fmtD(vidDuration)}</span>`:''}
-      ${topSize?`<span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-database text-lg"></i> ${topSize}</span>`:''}
+      <span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-database text-lg"></i> <span id="sz-top">…</span></span>
       <span class="flex items-center gap-2 font-black text-sm"><i class="ti ti-file-type-mp4 text-lg"></i> ${codec}</span>
     </div>
     
@@ -378,6 +370,24 @@ function renderResult(t,v){
     }
   });
   G('dbtn').onclick=doDownload;
+
+  // Fetch real file sizes (HEAD request via proxy) instead of estimating
+  vars.forEach((vr,i)=>{
+    fetch(`/api/filesize?url=${encodeURIComponent(vr.url)}`)
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{
+        if(!d||!d.size)return;
+        const txt=fmtBytes(d.size);
+        const el=document.getElementById('sz-'+i);
+        if(el)el.textContent=txt;
+        if(i===0){const top=document.getElementById('sz-top');if(top)top.textContent=txt}
+      })
+      .catch(()=>{
+        const el=document.getElementById('sz-'+i);
+        if(el)el.textContent='—';
+        if(i===0){const top=document.getElementById('sz-top');if(top)top.textContent='—'}
+      });
+  });
 
   const playOverlay=G('playOverlay');
   if(playOverlay){
