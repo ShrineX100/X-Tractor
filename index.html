@@ -373,20 +373,20 @@ function renderResult(t,v){
 
   // Fetch real file sizes (HEAD request via proxy) instead of estimating
   vars.forEach((vr,i)=>{
-    fetch(`/api/filesize?url=${encodeURIComponent(vr.url)}`)
-      .then(r=>r.ok?r.json():null)
+    const setTxt=(txt)=>{
+      const el=document.getElementById('sz-'+i);
+      if(el)el.textContent=txt;
+      if(i===0){const top=document.getElementById('sz-top');if(top)top.textContent=txt}
+    };
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),8000);
+    fetch(`/api/filesize?url=${encodeURIComponent(vr.url)}`,{signal:controller.signal})
+      .then(r=>{clearTimeout(timer);return r.ok?r.json():Promise.reject()})
       .then(d=>{
-        if(!d||!d.size)return;
-        const txt=fmtBytes(d.size);
-        const el=document.getElementById('sz-'+i);
-        if(el)el.textContent=txt;
-        if(i===0){const top=document.getElementById('sz-top');if(top)top.textContent=txt}
+        if(d&&d.size){setTxt(fmtBytes(d.size))}
+        else{setTxt('—')}
       })
-      .catch(()=>{
-        const el=document.getElementById('sz-'+i);
-        if(el)el.textContent='—';
-        if(i===0){const top=document.getElementById('sz-top');if(top)top.textContent='—'}
-      });
+      .catch(()=>{clearTimeout(timer);setTxt('—')});
   });
 
   const playOverlay=G('playOverlay');
