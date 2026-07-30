@@ -53,7 +53,14 @@
   html.dark input#url::placeholder { color: rgba(255,248,234,0.4); }
   html.dark .fbtn, html.dark .pbtn { border-color: var(--ink); color: var(--ink); }
   html.dark .foot { color: rgba(255,248,234,0.6); }
-  html.dark .ebox { color: #111111; }
+  html.dark .card .text-ink,
+  html.dark .rc .text-ink,
+  html.dark .card [class*="text-ink/"],
+  html.dark .rc [class*="text-ink/"] { color: var(--ink) !important; }
+  html.dark .rc .text-ink\/60 { color: rgba(255,248,234,0.6) !important; }
+  html.dark .rc .text-ink\/70 { color: rgba(255,248,234,0.7) !important; }
+  html.dark .rc .text-ink\/80 { color: rgba(255,248,234,0.8) !important; }
+  html.dark .rc a.bg-yellow { color: #111111 !important; }
 
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   
