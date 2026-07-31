@@ -18,8 +18,19 @@ export default async function handler(req, res) {
 
     const buffer = Buffer.from(await twResp.arrayBuffer());
 
+    const rawName = filename || 'video.mp4';
+    // Content-Disposition headers only allow ASCII in the plain filename="" part.
+    // Strip non-ASCII for a safe fallback name, and additionally provide the
+    // proper RFC 5987 filename*= form so browsers that support it show the
+    // full original (including unicode) name.
+    const asciiName = rawName.replace(/[^\x20-\x7E]/g, '').trim() || 'video.mp4';
+    const encodedName = encodeURIComponent(rawName);
+
     res.setHeader('Content-Type', 'video/mp4');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename || 'video.mp4'}"`);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${asciiName}"; filename*=UTF-8''${encodedName}`
+    );
     res.setHeader('Content-Length', buffer.length);
     res.status(200).send(buffer);
   } catch (e) {
