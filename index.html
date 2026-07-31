@@ -175,9 +175,21 @@ themeBtn.addEventListener('click',()=>{
 (function(){
 const G=id=>document.getElementById(id);
 const urlIn=G('url'),clrBtn=G('clr'),pstBtn=G('pbtn'),fchBtn=G('fbtn'),ebox=G('ebox'),emsg=G('emsg'),rc=G('rc');
-let vars=[],selQ=0,tid='',vidDuration=0;
+let vars=[],selQ=0,tid='',vidDuration=0,tslug='';
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+function slugify(text,author){
+  let base=(text||'').trim();
+  // Strip URLs (t.co links etc.) and line breaks — they add no value to a filename
+  base=base.replace(/https?:\/\/\S+/g,'').replace(/[\r\n]+/g,' ').trim();
+  if(!base&&author)base=author;
+  if(!base)return'';
+  // Keep it filesystem-safe across Windows/macOS/Linux
+  base=base.replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,'_').replace(/_+/g,'_');
+  base=base.replace(/^_+|_+$/g,'');
+  return base.slice(0,60);
+}
 
 function fmtD(s){
   if(!s)return'';
@@ -255,6 +267,7 @@ async function doFetch(){
     vars=rv.filter(x=>!x.content_type||x.content_type==='video/mp4')
            .sort((a,b)=>(b.bitrate||0)-(a.bitrate||0));
     selQ=0;tid=t.id||Date.now();
+    tslug=slugify(t.text,t.author?.screen_name);
     renderResult(t,v);
   }catch(e){showErr(e.message)}
   finally{fchBtn.disabled=false;fchBtn.innerHTML='<i class="ti ti-search text-lg"></i> Fetch video'}
@@ -438,7 +451,7 @@ function doDownload(){
   if(dt)dt.classList.add('hidden');
   if(pw){pw.classList.remove('hidden');pb.style.width='0%';pp.textContent='0%';ps.textContent=''}
 
-  const fname=`x_${tid}_${qlbl(vr)}.mp4`;
+  const fname=`${tslug||'x_'+tid}_${qlbl(vr)}.mp4`;
 
   // Route through our own serverless proxy so video.twimg.com sees a
   // server-to-server request instead of a browser request from a
