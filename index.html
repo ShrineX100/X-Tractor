@@ -185,8 +185,9 @@ function slugify(text,author){
   base=base.replace(/https?:\/\/\S+/g,'').replace(/[\r\n]+/g,' ').trim();
   if(!base&&author)base=author;
   if(!base)return'';
-  // Keep it filesystem-safe across Windows/macOS/Linux
-  base=base.replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,'_').replace(/_+/g,'_');
+  // Keep it filesystem-safe across Windows/macOS/Linux, and ASCII-only so it's
+  // always safe to send through HTTP headers (Content-Disposition) too
+  base=base.replace(/[^\x20-\x7E]/g,'').replace(/[\\/:*?"<>|]/g,'').replace(/\s+/g,'_').replace(/_+/g,'_');
   base=base.replace(/^_+|_+$/g,'');
   return base.slice(0,60);
 }
