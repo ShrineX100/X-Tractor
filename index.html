@@ -175,7 +175,7 @@ themeBtn.addEventListener('click',()=>{
 (function(){
 const G=id=>document.getElementById(id);
 const urlIn=G('url'),clrBtn=G('clr'),pstBtn=G('pbtn'),fchBtn=G('fbtn'),ebox=G('ebox'),emsg=G('emsg'),rc=G('rc');
-let vars=[],selQ=0,tid='',vidDuration=0,tslug='';
+let vars=[],selQ=0,tid='',vidDuration=0,tslug='',curTweet=null,selV=0;
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
@@ -261,17 +261,26 @@ async function doFetch(){
       if(t.media?.photos?.length)throw new Error('Images only — no video in this tweet');
       throw new Error('No video found in this tweet');
     }
-    const v=t.media.videos[0];
-    vidDuration=v.duration||0;
-    let rv=v.variants||[];
-    if(!rv.length&&v.url)rv=[{url:v.url,content_type:'video/mp4',bitrate:0}];
-    vars=rv.filter(x=>!x.content_type||x.content_type==='video/mp4')
-           .sort((a,b)=>(b.bitrate||0)-(a.bitrate||0));
-    selQ=0;tid=t.id||Date.now();
-    tslug=slugify(t.text,t.author?.screen_name);
-    renderResult(t,v);
+    curTweet=t;
+    tid=t.id||Date.now();
+    selectVideo(0);
   }catch(e){showErr(e.message)}
   finally{fchBtn.disabled=false;fchBtn.innerHTML='<i class="ti ti-search text-lg"></i> Fetch video'}
+}
+
+function selectVideo(idx){
+  const t=curTweet;
+  const v=t.media.videos[idx];
+  selV=idx;
+  vidDuration=v.duration||0;
+  let rv=v.variants||[];
+  if(!rv.length&&v.url)rv=[{url:v.url,content_type:'video/mp4',bitrate:0}];
+  vars=rv.filter(x=>!x.content_type||x.content_type==='video/mp4')
+         .sort((a,b)=>(b.bitrate||0)-(a.bitrate||0));
+  selQ=0;
+  const suffix=t.media.videos.length>1?`_clip${idx+1}`:'';
+  tslug=slugify(t.text,t.author?.screen_name)+suffix;
+  renderResult(t,v);
 }
 
 function renderResult(t,v){
@@ -313,7 +322,12 @@ function renderResult(t,v){
       </a>
     </div>
     
-    ${multi?`<div style="padding:9px 20px;border-bottom:3px solid #111111;font-size:12px;font-weight:800;color:rgba(17,17,17,0.7)" class="flex items-center gap-2"><i class="ti ti-info-circle text-lg"></i> ${t.media.videos.length} videos in this post — showing the first one</div>`:''}
+    ${multi?`<div class="p-4 border-b-[3px] border-ink flex flex-wrap gap-2">
+      ${t.media.videos.map((mv,i)=>`
+        <button class="mv-tab flex items-center gap-2 border-[2px] border-ink rounded-[10px] px-3 py-2 font-black text-xs transition hover:-translate-y-0.5 ${i===selV?'bg-purple text-cream':'bg-cream'}" data-vi="${i}" style="${i===selV?'':'color:#111111'}">
+          <i class="ti ti-video text-sm"></i> Clip ${i+1}${mv.duration?` · ${fmtD(mv.duration)}`:''}
+        </button>`).join('')}
+    </div>`:''}
     
     ${t.text?`<div class="ttext p-5 border-b-[3px] border-ink font-bold text-ink/80 leading-relaxed text-sm">${esc(t.text)}</div>`:''}
     
@@ -401,6 +415,10 @@ function renderResult(t,v){
         else{setTxt('—')}
       })
       .catch(()=>{clearTimeout(timer);setTxt('—')});
+  });
+
+  document.querySelectorAll('.mv-tab').forEach(btn=>{
+    btn.onclick=()=>{selectVideo(parseInt(btn.dataset.vi))};
   });
 
   const playOverlay=G('playOverlay');
