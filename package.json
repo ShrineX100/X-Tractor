@@ -1,0 +1,12 @@
+{
+  "name": "x-tractor-wbfm",
+  "version": "1.0.0",
+  "description": "X (Twitter) video downloader",
+  "private": true,
+  "scripts": {
+    "build": "echo 'No build needed for static site'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
