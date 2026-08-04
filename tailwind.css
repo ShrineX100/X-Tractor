@@ -611,6 +611,10 @@ video {
   margin-right: auto;
 }
 
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
 .mb-10 {
   margin-bottom: 2.5rem;
 }
@@ -1025,11 +1029,6 @@ video {
   font-size: 0.7rem;
 }
 
-.text-base {
-  font-size: 1rem;
-  line-height: 1.5rem;
-}
-
 .text-lg {
   font-size: 1.125rem;
   line-height: 1.75rem;
@@ -1213,6 +1212,11 @@ video {
 .hover\:text-mint:hover {
   --tw-text-opacity: 1;
   color: rgb(140 224 201 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-purple:hover {
+  --tw-text-opacity: 1;
+  color: rgb(157 127 224 / var(--tw-text-opacity, 1));
 }
 
 .hover\:shadow-brutal:hover {
