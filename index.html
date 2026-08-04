@@ -8,9 +8,14 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="/tailwind.css" rel="stylesheet">
 <style>
-  :root { --bg:#FFF8EA; --card:#FFF8EA; --ink:#111111; --ink-inv:#FFF8EA; }
-  html.dark { --bg:#161616; --card:#1F1F1F; --ink:#FFF8EA; --ink-inv:#111111; }
-  body { background-color: var(--bg); transition: background-color .2s; }
+  :root { --bg:#FFF8EA; --card:#FFF8EA; --ink:#111111; --ink-inv:#FFF8EA; --dot:rgba(17,17,17,0.35); }
+  html.dark { --bg:#161616; --card:#1F1F1F; --ink:#FFF8EA; --ink-inv:#111111; --dot:rgba(255,248,234,0.25); }
+  body {
+    background-color: var(--bg);
+    background-image: radial-gradient(var(--dot) 1.5px, transparent 1.5px);
+    background-size: 26px 26px;
+    transition: background-color .2s;
+  }
 
   .toggle-wrap { position: fixed; top: 20px; right: 20px; z-index: 50; }
   .theme-btn {
@@ -37,8 +42,6 @@
   html.dark .rc .text-ink\/80 { color: rgba(255,248,234,0.8) !important; }
   html.dark .rc a.bg-yellow { color: #111111 !important; }
 
-  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-  
   .ttext { 
     display: -webkit-box; 
     -webkit-line-clamp: 3; 
