@@ -19,6 +19,27 @@
 
   .toggle-wrap { position: fixed; top: 20px; right: 20px; z-index: 50; }
 
+  .settings-menu {
+    position: absolute; top: 58px; right: 0; width: 220px;
+    background: var(--card); border: 3px solid var(--ink); border-radius: 14px;
+    box-shadow: 5px 5px 0 0 var(--ink); padding: 8px;
+    opacity: 0; pointer-events: none; transform: translateY(-6px);
+    transition: opacity .15s, transform .15s; z-index: 55;
+  }
+  .settings-menu.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
+  .settings-item {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 10px 10px; border-radius: 10px; border: none; background: none;
+    color: var(--ink); font-weight: 800; font-size: 13.5px; cursor: pointer;
+    transition: background-color .15s;
+  }
+  .settings-item:hover { background: rgba(128,128,128,0.12); }
+
+  .switch { width: 38px; height: 22px; border-radius: 999px; border: 2px solid var(--ink); background: var(--bg); position: relative; flex-shrink: 0; transition: background-color .2s; }
+  .switch-knob { position: absolute; top: 1px; left: 1px; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); transition: transform .2s; }
+  html.dark .switch { background: #9D7FE0; }
+  html.dark .switch-knob { transform: translateX(16px); background: #FFF8EA; }
+
   .hist-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 60;
     opacity: 0; pointer-events: none; transition: opacity .2s;
@@ -114,19 +135,26 @@
 </head>
 <body class="font-sans text-ink">
 
-<div class="toggle-wrap flex gap-3">
-  <button class="theme-btn" id="histBtn" aria-label="Download history">
-    <i class="ti ti-clock-history"></i>
+<div class="toggle-wrap">
+  <button class="theme-btn" id="settingsBtn" aria-label="Settings">
+    <i class="ti ti-settings"></i>
   </button>
-  <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
-    <i class="ti ti-moon" id="themeIcon"></i>
-  </button>
+  <div class="settings-menu" id="settingsMenu">
+    <button class="settings-item" id="themeBtn">
+      <span class="flex items-center gap-2"><i class="ti ti-moon" id="themeIcon"></i> Dark mode</span>
+      <span class="switch" id="themeSwitch"><span class="switch-knob"></span></span>
+    </button>
+    <button class="settings-item" id="histBtn">
+      <span class="flex items-center gap-2"><i class="ti ti-history"></i> Download history</span>
+      <i class="ti ti-chevron-right" style="font-size:15px;opacity:.5"></i>
+    </button>
+  </div>
 </div>
 
 <div class="hist-overlay" id="histOverlay"></div>
 <div class="hist-panel" id="histPanel">
   <div class="hist-head">
-    <span class="font-black text-lg flex items-center gap-2"><i class="ti ti-clock-history"></i> History</span>
+    <span class="font-black text-lg flex items-center gap-2"><i class="ti ti-history"></i> History</span>
     <button class="theme-btn" id="histCloseBtn" aria-label="Close history" style="width:36px;height:36px">
       <i class="ti ti-x" style="font-size:16px"></i>
     </button>
@@ -192,6 +220,9 @@
 const root=document.documentElement;
 const themeBtn=document.getElementById('themeBtn');
 const themeIcon=document.getElementById('themeIcon');
+const settingsBtn=document.getElementById('settingsBtn');
+const settingsMenu=document.getElementById('settingsMenu');
+const histBtnEl=document.getElementById('histBtn');
 
 function applyTheme(dark){
   root.classList.toggle('dark',dark);
@@ -206,6 +237,19 @@ themeBtn.addEventListener('click',()=>{
   const isDark=!root.classList.contains('dark');
   applyTheme(isDark);
   localStorage.setItem('theme',isDark?'dark':'light');
+});
+
+settingsBtn.addEventListener('click',(e)=>{
+  e.stopPropagation();
+  settingsMenu.classList.toggle('open');
+});
+document.addEventListener('click',(e)=>{
+  if(!settingsMenu.contains(e.target)&&e.target!==settingsBtn){
+    settingsMenu.classList.remove('open');
+  }
+});
+histBtnEl.addEventListener('click',()=>{
+  settingsMenu.classList.remove('open');
 });
 })();
 </script>
