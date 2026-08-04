@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>X-Tractor</title>
+<title>xTractor</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='4' width='56' height='56' rx='14' fill='%239D7FE0' stroke='%23111111' stroke-width='4'/%3E%3Cg transform='translate(15,15) scale(1.45)'%3E%3Cpath d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.261 5.635L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z' fill='%23111111'/%3E%3C/g%3E%3C/svg%3E">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.34.0/dist/tabler-icons.min.css" rel="stylesheet">
 <link href="/tailwind.css" rel="stylesheet">
 <style>
-  :root { --bg:#FFF8EA; --card:#FFF8EA; --ink:#111111; --ink-inv:#FFF8EA; --dot:rgba(17,17,17,0.35); }
-  html.dark { --bg:#161616; --card:#1F1F1F; --ink:#FFF8EA; --ink-inv:#111111; --dot:rgba(255,248,234,0.25); }
+  :root { --bg:#FFF8EA; --card:#FFF8EA; --ink:#111111; --ink-inv:#FFF8EA; --dot:rgba(17,17,17,0.22); }
+  html.dark { --bg:#161616; --card:#1F1F1F; --ink:#FFF8EA; --ink-inv:#111111; --dot:rgba(255,248,234,0.16); }
   body {
     background-color: var(--bg);
     background-image: radial-gradient(var(--dot) 1.5px, transparent 1.5px);
@@ -79,6 +79,12 @@
   }
   .hist-actions button:hover { transform: translateY(-1px); background: #FFD54F; color: #111; }
   .ti-loader-2 { display: inline-block; animation: sp .7s linear infinite; }
+
+  .txt-halo {
+    text-shadow:
+      0 0 6px var(--bg), 0 0 6px var(--bg), 0 0 10px var(--bg),
+      0 0 14px var(--bg);
+  }
   .hist-empty { text-align: center; opacity: .5; font-weight: 800; font-size: 13px; padding: 40px 10px; }
   .theme-btn {
     width: 48px; height: 48px; background: var(--card); border: 3px solid var(--ink);
@@ -170,14 +176,15 @@
 <h2 class="sr-only">X (Twitter) video downloader — paste a tweet URL to extract and download the video</h2>
 
 <div class="wrap min-h-screen w-full flex flex-col items-center px-4 py-10 md:py-14">
-  
+  <div class="w-full flex flex-col items-center flex-1">
+
   <!-- Header -->
   <div class="hdr fi text-center mb-10 rotate-[-2deg]">
     <div class="w-16 h-16 bg-purple border-[3px] border-ink rounded-[18px] shadow-brutal-sm flex items-center justify-center mx-auto mb-4 transition hover:-translate-y-1 hover:shadow-brutal cursor-pointer">
       <svg viewBox="0 0 24 24" width="32" height="32" fill="#111111"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.74l7.73-8.835L1.254 2.25H8.08l4.261 5.635L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
     </div>
-    <h1 class="text-3xl md:text-4xl font-black tracking-[-0.065em] text-ink">X-Tractor</h1>
-    <p class="font-extrabold text-ink/70 mt-2 text-sm">Paste a link and it Sinks !</p>
+    <h1 class="text-3xl md:text-4xl font-black tracking-[-0.065em] text-ink txt-halo">xTractor</h1>
+    <p class="font-extrabold text-ink/70 mt-2 text-sm txt-halo">Paste a link and it Sinks !</p>
   </div>
 
   <!-- Input Card -->
@@ -208,9 +215,12 @@
   <!-- Result Container -->
   <div class="card rc w-full max-w-xl bg-cream border-[3px] border-ink rounded-[20px] shadow-brutal-lg overflow-hidden hidden mb-6 rotate-[-1deg] hover:rotate-0 transition-transform duration-300" id="rc"></div>
 
+  </div>
+
   <!-- Footer -->
-  <p class="foot max-w-md text-center text-xs font-extrabold text-ink/60 leading-relaxed mt-6">
+  <p class="foot max-w-md text-center text-xs font-extrabold text-ink/60 leading-relaxed mt-10 txt-halo">
     Built with <span class="text-purple">♥</span> by Shrine<br>
+    <a href="https://wa.me/2348059316514" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 hover:text-mint transition"><i class="ti ti-brand-whatsapp"></i> +234 805 931 6514</a><br>
     © 2026
   </p>
 </div>
