@@ -18,6 +18,47 @@
   }
 
   .toggle-wrap { position: fixed; top: 20px; right: 20px; z-index: 50; }
+
+  .hist-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 60;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .hist-overlay.open { opacity: 1; pointer-events: auto; }
+
+  .hist-panel {
+    position: fixed; top: 0; right: 0; height: 100%; width: 340px; max-width: 88vw;
+    background: var(--card); border-left: 3px solid var(--ink); z-index: 61;
+    display: flex; flex-direction: column; transform: translateX(100%);
+    transition: transform .25s ease; color: var(--ink);
+  }
+  .hist-panel.open { transform: translateX(0); }
+  .hist-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; border-bottom: 3px solid var(--ink);
+  }
+  .hist-list { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .hist-foot { padding: 14px 16px; border-top: 3px solid var(--ink); }
+
+  .hist-item {
+    display: flex; gap: 10px; padding: 10px; border: 2px solid var(--ink);
+    border-radius: 12px; background: var(--bg); align-items: center;
+  }
+  .hist-thumb {
+    width: 52px; height: 52px; border-radius: 8px; border: 2px solid var(--ink);
+    object-fit: cover; flex-shrink: 0; background: #ccc;
+  }
+  .hist-info { flex: 1; min-width: 0; }
+  .hist-title { font-weight: 900; font-size: 12.5px; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .hist-meta { font-size: 10.5px; font-weight: 700; opacity: .6; margin-top: 3px; }
+  .hist-actions { display: flex; flex-direction: column; gap: 6px; }
+  .hist-actions button {
+    width: 30px; height: 30px; border: 2px solid var(--ink); border-radius: 8px;
+    background: var(--card); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ink); font-size: 14px; transition: transform .15s;
+  }
+  .hist-actions button:hover { transform: translateY(-1px); background: #FFD54F; color: #111; }
+  .ti-loader-2 { display: inline-block; animation: sp .7s linear infinite; }
+  .hist-empty { text-align: center; opacity: .5; font-weight: 800; font-size: 13px; padding: 40px 10px; }
   .theme-btn {
     width: 48px; height: 48px; background: var(--card); border: 3px solid var(--ink);
     border-radius: 14px; box-shadow: 3px 3px 0 0 var(--ink); display: flex;
@@ -73,10 +114,29 @@
 </head>
 <body class="font-sans text-ink">
 
-<div class="toggle-wrap">
+<div class="toggle-wrap flex gap-3">
+  <button class="theme-btn" id="histBtn" aria-label="Download history">
+    <i class="ti ti-clock-history"></i>
+  </button>
   <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode">
     <i class="ti ti-moon" id="themeIcon"></i>
   </button>
+</div>
+
+<div class="hist-overlay" id="histOverlay"></div>
+<div class="hist-panel" id="histPanel">
+  <div class="hist-head">
+    <span class="font-black text-lg flex items-center gap-2"><i class="ti ti-clock-history"></i> History</span>
+    <button class="theme-btn" id="histCloseBtn" aria-label="Close history" style="width:36px;height:36px">
+      <i class="ti ti-x" style="font-size:16px"></i>
+    </button>
+  </div>
+  <div class="hist-list" id="histList"></div>
+  <div class="hist-foot">
+    <button class="w-full bg-pink border-[3px] border-ink rounded-[12px] py-2.5 px-4 font-black text-ink text-sm shadow-brutal-sm hover:-translate-y-1 hover:shadow-brutal transition flex items-center justify-center gap-2" id="histClearBtn">
+      <i class="ti ti-trash text-lg"></i> Clear history
+    </button>
+  </div>
 </div>
 
 <h2 class="sr-only">X (Twitter) video downloader — paste a tweet URL to extract and download the video</h2>
@@ -484,6 +544,7 @@ function doDownload(){
       setTimeout(()=>URL.revokeObjectURL(u),2000);
       db.className='w-full bg-mint border-[3px] border-ink rounded-[12px] py-3.5 px-4 font-black text-ink shadow-brutal hover:-translate-y-1 hover:shadow-brutal-lg transition flex items-center justify-center gap-2';
       db.innerHTML='<i class="ti ti-check text-xl"></i> Finished!';
+      addHistoryEntry(vr,fname);
     })
     .catch(()=>{
       // Fallback: open in new tab directly
@@ -501,6 +562,134 @@ function doDownload(){
     })
     .finally(()=>{setTimeout(()=>resetDlBtn(),4500)});
 }
+
+// ===== Download History (localStorage, this browser only) =====
+const HIST_KEY='xtractor_history';
+const HIST_MAX=50;
+
+function getHistory(){
+  try{return JSON.parse(localStorage.getItem(HIST_KEY)||'[]')}
+  catch{return[]}
+}
+function setHistory(list){
+  try{localStorage.setItem(HIST_KEY,JSON.stringify(list.slice(0,HIST_MAX)))}
+  catch{}
+}
+
+function addHistoryEntry(vr,fname){
+  if(!curTweet)return;
+  const t=curTweet;
+  const entry={
+    id:`${tid}-${selV}-${Date.now()}`,
+    tweetId:tid,
+    tweetUrl:t.url||'',
+    author:t.author?.name||t.author?.screen_name||'',
+    handle:t.author?.screen_name||'',
+    text:(t.text||'').slice(0,140),
+    thumb:t.media.videos[selV]?.thumbnail_url||'',
+    quality:qlbl(vr),
+    videoUrl:vr.url,
+    filename:fname,
+    ts:Date.now()
+  };
+  const list=getHistory().filter(e=>e.videoUrl!==entry.videoUrl); // avoid exact dupes
+  list.unshift(entry);
+  setHistory(list);
+  renderHistory();
+}
+
+function fmtWhen(ts){
+  const diff=Date.now()-ts;
+  const min=Math.floor(diff/60000);
+  if(min<1)return'just now';
+  if(min<60)return min+'m ago';
+  const hr=Math.floor(min/60);
+  if(hr<24)return hr+'h ago';
+  const day=Math.floor(hr/24);
+  if(day<7)return day+'d ago';
+  return new Date(ts).toLocaleDateString();
+}
+
+function renderHistory(){
+  const listEl=G('histList');
+  if(!listEl)return;
+  const items=getHistory();
+  if(!items.length){
+    listEl.innerHTML='<div class="hist-empty"><i class="ti ti-mood-empty text-2xl"></i><br>No downloads yet</div>';
+    return;
+  }
+  listEl.innerHTML=items.map(e=>`
+    <div class="hist-item" data-id="${e.id}">
+      ${e.thumb?`<img class="hist-thumb" src="${esc(e.thumb)}" alt="" onerror="this.style.visibility='hidden'">`:'<div class="hist-thumb"></div>'}
+      <div class="hist-info">
+        <div class="hist-title">${esc(e.text||e.author||'Untitled clip')}</div>
+        <div class="hist-meta">${esc(e.handle?'@'+e.handle:'')} · ${e.quality} · ${fmtWhen(e.ts)}</div>
+      </div>
+      <div class="hist-actions">
+        <button class="hist-redl" data-id="${e.id}" aria-label="Download again"><i class="ti ti-download"></i></button>
+        <button class="hist-rm" data-id="${e.id}" aria-label="Remove"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>
+  `).join('');
+
+  listEl.querySelectorAll('.hist-redl').forEach(btn=>{
+    btn.onclick=()=>{
+      const entry=getHistory().find(e=>e.id===btn.dataset.id);
+      if(entry)redownloadHistoryEntry(entry,btn);
+    };
+  });
+  listEl.querySelectorAll('.hist-rm').forEach(btn=>{
+    btn.onclick=()=>{
+      setHistory(getHistory().filter(e=>e.id!==btn.dataset.id));
+      renderHistory();
+    };
+  });
+}
+
+function redownloadHistoryEntry(entry,btnEl){
+  const icon=btnEl.querySelector('i');
+  const origClass=icon.className;
+  icon.className='ti ti-loader-2';
+  btnEl.disabled=true;
+
+  fetch(`/api/download?url=${encodeURIComponent(entry.videoUrl)}&filename=${encodeURIComponent(entry.filename)}`)
+    .then(r=>{if(!r.ok)throw 0;return r.blob()})
+    .then(blob=>{
+      const u=URL.createObjectURL(blob);
+      const a=Object.assign(document.createElement('a'),{href:u,download:entry.filename});
+      document.body.appendChild(a);a.click();document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(u),2000);
+      icon.className='ti ti-check';
+    })
+    .catch(()=>{
+      // Fallback: open the source video directly
+      window.open(entry.videoUrl,'_blank','noopener,noreferrer');
+      icon.className='ti ti-external-link';
+    })
+    .finally(()=>{
+      setTimeout(()=>{icon.className=origClass;btnEl.disabled=false},2500);
+    });
+}
+
+function openHistory(){
+  renderHistory();
+  G('histPanel').classList.add('open');
+  G('histOverlay').classList.add('open');
+}
+function closeHistory(){
+  G('histPanel').classList.remove('open');
+  G('histOverlay').classList.remove('open');
+}
+
+G('histBtn').addEventListener('click',openHistory);
+G('histCloseBtn').addEventListener('click',closeHistory);
+G('histOverlay').addEventListener('click',closeHistory);
+G('histClearBtn').addEventListener('click',()=>{
+  if(getHistory().length&&confirm('Clear your entire download history? This cannot be undone.')){
+    setHistory([]);
+    renderHistory();
+  }
+});
 })();
 </script>
 </body>
