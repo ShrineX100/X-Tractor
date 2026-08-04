@@ -31,7 +31,7 @@
     width: 100%; display: flex; align-items: center; justify-content: space-between;
     gap: 10px; padding: 10px 10px; border-radius: 10px; border: none; background: none;
     color: var(--ink); font-weight: 800; font-size: 13.5px; cursor: pointer;
-    transition: background-color .15s;
+    transition: background-color .15s; text-align: left;
   }
   .settings-item:hover { background: rgba(128,128,128,0.12); }
 
@@ -142,6 +142,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
   }
+  html.reduce-motion .hdr,
+  html.reduce-motion .card,
+  html.reduce-motion .rc {
+    transform: none !important;
+  }
 </style>
 <base target="_blank">
 </head>
@@ -153,15 +158,15 @@
   </button>
   <div class="settings-menu" id="settingsMenu">
     <button class="settings-item" id="themeBtn">
-      <span class="flex items-center gap-2"><i class="ti ti-moon" id="themeIcon"></i> Dark mode</span>
+      <span class="flex items-center gap-2 text-left"><i class="ti ti-moon" id="themeIcon"></i> Dark Mode</span>
       <span class="switch" id="themeSwitch"><span class="switch-knob"></span></span>
     </button>
     <button class="settings-item" id="motionBtn">
-      <span class="flex items-center gap-2"><i class="ti ti-wand-off"></i> Reduce animations</span>
+      <span class="flex items-center gap-2 text-left"><i class="ti ti-wand-off"></i> Motion</span>
       <span class="switch" id="motionSwitch"><span class="switch-knob"></span></span>
     </button>
     <button class="settings-item" id="histBtn">
-      <span class="flex items-center gap-2"><i class="ti ti-history"></i> Download history</span>
+      <span class="flex items-center gap-2 text-left"><i class="ti ti-history"></i> History</span>
       <i class="ti ti-chevron-right" style="font-size:15px;opacity:.5"></i>
     </button>
   </div>
@@ -706,7 +711,7 @@ function renderHistory(){
   }
   listEl.innerHTML=items.map(e=>`
     <div class="hist-item" data-id="${e.id}">
-      ${e.thumb?`<img class="hist-thumb" src="${esc(e.thumb)}" alt="" onerror="this.style.visibility='hidden'">`:'<div class="hist-thumb"></div>'}
+      ${e.thumb?`<a href="${esc(e.tweetUrl||'#')}" target="_blank" rel="noopener noreferrer" aria-label="Open tweet"><img class="hist-thumb" src="${esc(e.thumb)}" alt="" onerror="this.style.visibility='hidden'"></a>`:`<a href="${esc(e.tweetUrl||'#')}" target="_blank" rel="noopener noreferrer" aria-label="Open tweet"><div class="hist-thumb"></div></a>`}
       <div class="hist-info">
         <div class="hist-title">${esc(e.text||e.author||'Untitled clip')}</div>
         <div class="hist-meta">${esc(e.handle?'@'+e.handle:'')} · ${e.quality} · ${fmtWhen(e.ts)}</div>
