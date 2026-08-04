@@ -267,7 +267,7 @@ applyTheme(saved?saved==='dark':prefersDark);
 
 function applyMotion(reduced){
   root.classList.toggle('reduce-motion',reduced);
-  motionSwitch.classList.toggle('on',reduced);
+  motionSwitch.classList.toggle('on',!reduced);
 }
 
 const savedMotion=localStorage.getItem('reduceMotion');
